@@ -2,7 +2,7 @@
 A collections of Gradient-Based Meta-Learning Algorithms
 
 * [MAML](http://proceedings.mlr.press/v70/finn17a/finn17a.pdf)
-* [Reptile]()(https://openai.com/blog/reptile/)
+* [Reptile](https://openai.com/blog/reptile/)
 * [CAVIA]()
 
 
