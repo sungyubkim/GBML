@@ -27,13 +27,8 @@ class Reptile(GBML):
     def outer_loop(self, batch, is_train):
 
         self.network.zero_grad()
-        train_inputs, train_targets = batch['train']
-        train_inputs = train_inputs.cuda()
-        train_targets = train_targets.cuda()
-
-        test_inputs, test_targets = batch['test']
-        test_inputs = test_inputs.cuda()
-        test_targets = test_targets.cuda()
+        
+        train_inputs, train_targets, test_inputs, test_targets = self.unpack_batch(batch)
 
         loss_log = 0
         acc_log = 0
@@ -61,7 +56,7 @@ class Reptile(GBML):
                 if is_train:
                     outer_grad = []
                     for p_0, p_T in zip(fmodel.parameters(time=0), fmodel.parameters(time=step)):
-                        outer_grad.append(-(p_T - p_0))
+                        outer_grad.append(-(p_T - p_0).detach()/(self.args.inner_lr * self.args.n_inner))
                     grad_list.append(outer_grad)
 
         if is_train:

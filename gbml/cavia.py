@@ -43,13 +43,8 @@ class CAVIA(GBML):
     def outer_loop(self, batch, is_train):
 
         self.network.zero_grad()
-        train_inputs, train_targets = batch['train']
-        train_inputs = train_inputs.cuda()
-        train_targets = train_targets.cuda()
-
-        test_inputs, test_targets = batch['test']
-        test_inputs = test_inputs.cuda()
-        test_targets = test_targets.cuda()
+        
+        train_inputs, train_targets, test_inputs, test_targets = self.unpack_batch(batch)
 
         loss_log = 0
         acc_log = 0

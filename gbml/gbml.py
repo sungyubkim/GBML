@@ -30,6 +30,16 @@ class GBML:
         self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.outer_optimizer, step_size=30, gamma=0.2)
         return None
 
+    def unpack_batch(self, batch):
+        train_inputs, train_targets = batch['train']
+        train_inputs = train_inputs.cuda()
+        train_targets = train_targets.cuda()
+
+        test_inputs, test_targets = batch['test']
+        test_inputs = test_inputs.cuda()
+        test_targets = test_targets.cuda()
+        return train_inputs, train_targets, test_inputs, test_targets
+
     def inner_loop(self):
         raise NotImplementedError
 
