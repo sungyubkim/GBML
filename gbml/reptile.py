@@ -43,17 +43,19 @@ class Reptile(GBML):
         for (train_input, train_target, test_input, test_target) in zip(train_inputs, train_targets, test_inputs, test_targets):
             inner_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.inner_lr)
             with higher.innerloop_ctx(self.network, inner_optimizer, track_higher_grads=False) as (fmodel, diffopt):
+                
+                if is_train:
+                    train_input = test_input
+                    train_target = test_target
 
                 for step in range(self.args.n_inner):
-
                     self.inner_loop(fmodel, diffopt, train_input, train_target)
                 
                 if not(is_train):
-                    test_logit = fmodel(test_input)
-                    outer_loss = F.cross_entropy(test_logit, test_target)
-                    loss_log += outer_loss.item()/self.batch_size
-
                     with torch.no_grad():
+                        test_logit = fmodel(test_input)
+                        outer_loss = F.cross_entropy(test_logit, test_target)
+                        loss_log += outer_loss.item()/self.batch_size
                         acc_log += get_accuracy(test_logit, test_target).item()/self.batch_size
             
                 if is_train:
