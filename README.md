@@ -12,7 +12,7 @@ A collections of Gradient-Based Meta-Learning Algorithms
 * Python >= 3.6
 * Pytorch >= 1.2
 * [Higher](https://github.com/facebookresearch/higher) 
-* [Torchemeta](https://github.com/tristandeleu/pytorch-meta) 
+* [Torchmeta](https://github.com/tristandeleu/pytorch-meta) 
 
 
 
