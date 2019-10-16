@@ -36,7 +36,7 @@ class Reptile(GBML):
         loss_list = []
 
         for (train_input, train_target, test_input, test_target) in zip(train_inputs, train_targets, test_inputs, test_targets):
-            inner_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.inner_lr)
+            inner_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.inner_lr, nesterov=True, momentum=0.9)
             with higher.innerloop_ctx(self.network, inner_optimizer, track_higher_grads=False) as (fmodel, diffopt):
                 
                 if is_train:
@@ -56,7 +56,7 @@ class Reptile(GBML):
                 if is_train:
                     outer_grad = []
                     for p_0, p_T in zip(fmodel.parameters(time=0), fmodel.parameters(time=step)):
-                        outer_grad.append(-(p_T - p_0).detach()/(self.args.inner_lr * self.args.n_inner))
+                        outer_grad.append(-(p_T - p_0).detach()/(self.args.n_inner * self.args.inner_lr))
                     grad_list.append(outer_grad)
 
         if is_train:

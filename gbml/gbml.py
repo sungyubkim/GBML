@@ -27,7 +27,7 @@ class GBML:
 
     def _init_opt(self):
         if self.args.outer_opt == 'SGD':
-            self.outer_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.outer_lr, nesterov=True, momentum=0.9)
+            self.outer_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.outer_lr)
         elif self.args.outer_opt == 'Adam':
             self.outer_optimizer = torch.optim.Adam(self.network.parameters(), lr=self.args.outer_lr)
         else:
