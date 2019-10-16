@@ -193,6 +193,7 @@ def parse_args():
     parser.add_argument('--outer_lr', type=float, default=1e-3)
     parser.add_argument('--outer_opt', type=str, default='Adam')
     # network settings
+    parser.add_argument('--net', type=str, default='ConvNet')
     parser.add_argument('--in_channels', type=int, default=3)
     parser.add_argument('--hidden_channels', type=int, default=64,
         help='Number of channels for each convolutional layer (default: 64).')

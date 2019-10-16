@@ -1,5 +1,5 @@
 # GBML
-A collections of Gradient-Based Meta-Learning Algorithms
+A collections of Gradient-Based Meta-Learning Algorithms with pytorch
 
 * [MAML](http://proceedings.mlr.press/v70/finn17a/finn17a.pdf)
 * [Reptile](https://openai.com/blog/reptile/)
@@ -18,6 +18,6 @@ A collections of Gradient-Based Meta-Learning Algorithms
 
 ## To do
 
-* Add ResNet, and Pre-trained feature extractor
+* Add ~~ResNet~~, and Pre-trained feature extractor
 * Add Proto-MAML, iMAML, Meta-Curvature
 

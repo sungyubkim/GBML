@@ -3,7 +3,8 @@ import torch
 import torch.nn as nn
 import os
 
-from network import ConvNet
+from net.convnet import ConvNet
+from net.resnet import ResNet
 
 class GBML:
     '''
@@ -15,14 +16,18 @@ class GBML:
         return None
 
     def _init_net(self):
-        self.network = ConvNet(self.args)
+        if self.args.net == 'ConvNet':
+            self.network = ConvNet(self.args)
+        elif self.args.net == 'ResNet':
+            self.network = ResNet(self.args)
+            self.args.hidden_channels = 640
         self.network.train()
         self.network.cuda()
         return None
 
     def _init_opt(self):
         if self.args.outer_opt == 'SGD':
-            self.outer_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.outer_lr, nesterov=True, momentum=0.999)
+            self.outer_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.outer_lr, nesterov=True, momentum=0.9)
         elif self.args.outer_opt == 'Adam':
             self.outer_optimizer = torch.optim.Adam(self.network.parameters(), lr=self.args.outer_lr)
         else:
