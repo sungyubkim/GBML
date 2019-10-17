@@ -162,7 +162,7 @@ def parse_args():
         help='Random seed.')   
     parser.add_argument('--data_path', type=str, default='./',
         help='Path of MiniImagenet.')
-    parser.add_argument('--result_path', type=str, default='./res')
+    parser.add_argument('--result_path', type=str, default='./result')
     parser.add_argument('--log_path', type=str, default='result.tsv')
     parser.add_argument('--save_path', type=str, default='best_model.pth')
     parser.add_argument('--load', type=lambda x: (str(x).lower() == 'true'), default=False)

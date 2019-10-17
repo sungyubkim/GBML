@@ -36,7 +36,7 @@ class Reptile(GBML):
         loss_list = []
 
         for (train_input, train_target, test_input, test_target) in zip(train_inputs, train_targets, test_inputs, test_targets):
-            inner_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.inner_lr, nesterov=True, momentum=0.9)
+            inner_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.inner_lr)
             with higher.innerloop_ctx(self.network, inner_optimizer, track_higher_grads=False) as (fmodel, diffopt):
                 
                 if is_train:

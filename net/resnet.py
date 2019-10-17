@@ -57,13 +57,12 @@ class ResNet(nn.Module):
             nn.Conv2d(3, iChannels, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(iChannels),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(2),
             self._make_layer(BasicBlock, cfg[0], layers[0], stride=2),
             self._make_layer(BasicBlock, cfg[1], layers[1], stride=2),
             self._make_layer(BasicBlock, cfg[2], layers[2], stride=2),
         )
         self.decoder = nn.Sequential(
-            nn.Linear(cfg[2] * 5 * 5, self.out_features),
+            nn.Linear(cfg[2] * 10 * 10, self.out_features),
         )
         self.init_params()
         return None
