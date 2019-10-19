@@ -92,6 +92,8 @@ def main(args):
 
     if args.load:
         model.load()
+    elif args.load_encoder:
+        model.load_encoder()
 
     train_dataset = MiniImagenet(args.data_path, num_classes_per_task=args.num_way,
                         meta_split='train', 
@@ -149,7 +151,8 @@ def main(args):
             model.save()
         torch.cuda.empty_cache()
 
-        # model.lr_sched()
+        if args.lr_sched:
+            model.lr_sched()
 
     return None
 
@@ -166,6 +169,7 @@ def parse_args():
     parser.add_argument('--log_path', type=str, default='result.tsv')
     parser.add_argument('--save_path', type=str, default='best_model.pth')
     parser.add_argument('--load', type=lambda x: (str(x).lower() == 'true'), default=False)
+    parser.add_argument('--load_encoder', type=lambda x: (str(x).lower() == 'true'), default=False)
     parser.add_argument('--load_path', type=str, default='best_model.pth')
     parser.add_argument('--device', type=int, nargs='+', default=[0], help='0 = CPU.')
     parser.add_argument('--num_workers', type=int, default=4,
@@ -190,8 +194,10 @@ def parse_args():
     # algorithm settings
     parser.add_argument('--n_inner', type=int, default=5)
     parser.add_argument('--inner_lr', type=float, default=1e-2)
+    parser.add_argument('--inner_opt', type=str, default='SGD')
     parser.add_argument('--outer_lr', type=float, default=1e-3)
     parser.add_argument('--outer_opt', type=str, default='Adam')
+    parser.add_argument('--lr_sched', type=lambda x: (str(x).lower() == 'true'), default=False)
     # network settings
     parser.add_argument('--net', type=str, default='ConvNet')
     parser.add_argument('--in_channels', type=int, default=3)

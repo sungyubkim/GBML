@@ -1,5 +1,5 @@
 # GBML
-A collections of Gradient-Based Meta-Learning Algorithms with pytorch
+A collection of Gradient-Based Meta-Learning Algorithms with pytorch
 
 * [MAML](http://proceedings.mlr.press/v70/finn17a/finn17a.pdf)
 * [Reptile](https://openai.com/blog/reptile/)

@@ -36,8 +36,7 @@ class MAML(GBML):
         loss_list = []
 
         for (train_input, train_target, test_input, test_target) in zip(train_inputs, train_targets, test_inputs, test_targets):
-            inner_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.inner_lr)
-            with higher.innerloop_ctx(self.network, inner_optimizer, track_higher_grads=is_train) as (fmodel, diffopt):
+            with higher.innerloop_ctx(self.network, self.inner_optimizer, track_higher_grads=is_train) as (fmodel, diffopt):
 
                 for step in range(self.args.n_inner):
                     self.inner_loop(fmodel, diffopt, train_input, train_target)

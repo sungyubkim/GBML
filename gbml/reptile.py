@@ -36,32 +36,32 @@ class Reptile(GBML):
         loss_list = []
 
         for (train_input, train_target, test_input, test_target) in zip(train_inputs, train_targets, test_inputs, test_targets):
-            inner_optimizer = torch.optim.SGD(self.network.parameters(), lr=self.args.inner_lr)
-            with higher.innerloop_ctx(self.network, inner_optimizer, track_higher_grads=False) as (fmodel, diffopt):
-                
-                if is_train:
-                    train_input = test_input
-                    train_target = test_target
+            override = self.inner_optimizer if is_train else None
+            
+            with higher.innerloop_ctx(self.network, self.inner_optimizer, track_higher_grads=False) as (fmodel, diffopt):
 
                 for step in range(self.args.n_inner):
+                    if is_train:
+                        index = np.random.permutation(np.arange(len(test_input)))[:10]
+                        train_input = test_input[index]
+                        train_target = test_target[index]
                     self.inner_loop(fmodel, diffopt, train_input, train_target)
                 
-                if not(is_train):
-                    with torch.no_grad():
-                        test_logit = fmodel(test_input)
-                        outer_loss = F.cross_entropy(test_logit, test_target)
-                        loss_log += outer_loss.item()/self.batch_size
-                        acc_log += get_accuracy(test_logit, test_target).item()/self.batch_size
+                with torch.no_grad():
+                    test_logit = fmodel(test_input)
+                    outer_loss = F.cross_entropy(test_logit, test_target)
+                    loss_log += outer_loss.item()/self.batch_size
+                    loss_list.append(outer_loss.item())
+                    acc_log += get_accuracy(test_logit, test_target).item()/self.batch_size
             
                 if is_train:
                     outer_grad = []
                     for p_0, p_T in zip(fmodel.parameters(time=0), fmodel.parameters(time=step)):
-                        outer_grad.append(-(p_T - p_0).detach()/(self.args.n_inner * self.args.inner_lr))
+                        outer_grad.append(-(p_T - p_0).detach())
                     grad_list.append(outer_grad)
 
         if is_train:
-            weight = torch.ones(len(grad_list))
-            weight = weight / torch.sum(weight)
+            weight = torch.ones(len(grad_list))/len(grad_list)
             grad = mix_grad(grad_list, weight)
             grad_log = apply_grad(self.network, grad)
             self.outer_optimizer.step()

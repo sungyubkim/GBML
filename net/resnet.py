@@ -69,7 +69,7 @@ class ResNet(nn.Module):
 
     def init_params(self):
         for k, v in self.named_parameters():
-            if ('conv' in k) or ('fc' in k):
+            if ('conv' in k) or ('meta' in k):
                 if ('weight' in k):
                     nn.init.kaiming_uniform_(v)
                 elif ('bias' in k):
