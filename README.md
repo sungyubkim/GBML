@@ -13,7 +13,7 @@ python3 main.py --alg=MAML
 python3 main.py --alg=Reptile
 ```
 
-* [CAVIA](http://proceedings.mlr.press/v97/zintgraf19a/zintgraf19a)
+* [CAVIA](http://proceedings.mlr.press/v97/zintgraf19a)
 
 ```python
 python3 main.py --alg=CAVIA
