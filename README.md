@@ -1,7 +1,7 @@
 # GBML
 A collection of Gradient-Based Meta-Learning Algorithms with pytorch
 
-* [MAML](http://proceedings.mlr.press/v70/finn17a/finn17a.pdf)
+* [MAML](http://proceedings.mlr.press/v70/finn17a)
 
 ```pyt
 python3 main.py --alg=MAML
