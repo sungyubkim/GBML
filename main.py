@@ -163,7 +163,7 @@ def parse_args():
     # experimental settings
     parser.add_argument('--seed', type=int, default=2020,
         help='Random seed.')   
-    parser.add_argument('--data_path', type=str, default='./',
+    parser.add_argument('--data_path', type=str, default='../data/',
         help='Path of MiniImagenet.')
     parser.add_argument('--result_path', type=str, default='./result')
     parser.add_argument('--log_path', type=str, default='result.tsv')
