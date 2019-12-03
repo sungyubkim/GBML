@@ -11,6 +11,7 @@ from torchmeta.utils.data import BatchMetaDataLoader
 from torchmeta.transforms import Categorical, ClassSplitter
 
 from gbml.maml import MAML
+from gbml.imaml import iMAML
 from gbml.reptile import Reptile
 from gbml.cavia import CAVIA
 from utils import set_seed, set_gpu, check_dir, dict2tsv, BestTracker
@@ -87,6 +88,8 @@ def main(args):
         model = Reptile(args)
     elif args.alg=='CAVIA':
         model = CAVIA(args)
+    elif args.alg=='iMAML':
+        model = iMAML(args)
     else:
         raise ValueError('Not implemented Meta-Learning Algorithm')
 
