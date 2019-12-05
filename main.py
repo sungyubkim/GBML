@@ -12,6 +12,7 @@ from torchmeta.transforms import Categorical, ClassSplitter
 
 from gbml.maml import MAML
 from gbml.imaml import iMAML
+from gbml.neumann import Neumann
 from gbml.reptile import Reptile
 from gbml.cavia import CAVIA
 from utils import set_seed, set_gpu, check_dir, dict2tsv, BestTracker
@@ -86,6 +87,8 @@ def main(args):
         model = MAML(args)
     elif args.alg=='Reptile':
         model = Reptile(args)
+    elif args.alg=='Neumann':
+        model = Neumann(args)
     elif args.alg=='CAVIA':
         model = CAVIA(args)
     elif args.alg=='iMAML':
@@ -203,6 +206,9 @@ def parse_args():
     parser.add_argument('--lr_sched', type=lambda x: (str(x).lower() == 'true'), default=False)
     # network settings
     parser.add_argument('--net', type=str, default='ConvNet')
+    parser.add_argument('--n_conv', type=int, default=4)
+    parser.add_argument('--n_dense', type=int, default=0)
+    parser.add_argument('--hidden_dim', type=int, default=256)
     parser.add_argument('--in_channels', type=int, default=3)
     parser.add_argument('--hidden_channels', type=int, default=64,
         help='Number of channels for each convolutional layer (default: 64).')

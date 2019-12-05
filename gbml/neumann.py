@@ -8,7 +8,7 @@ import copy
 from gbml.gbml import GBML
 from utils import get_accuracy, apply_grad, mix_grad, grad_to_cos, loss_to_ent
 
-class iMAML(GBML):
+class Neumann(GBML):
 
     def __init__(self, args):
         super().__init__(args)
@@ -17,8 +17,8 @@ class iMAML(GBML):
         self.network_aux.load_state_dict(self.network.state_dict())
         self._init_opt()
         self.inner_optimizer = torch.optim.SGD(self.network_aux.parameters(), lr=self.args.inner_lr)
-        self.lamb = 2.0
-        self.n_cg = 1
+        self.lamb = 10.0
+        self.n_series = 3
         return None
 
     @torch.enable_grad()
@@ -26,28 +26,18 @@ class iMAML(GBML):
         self.network_aux.zero_grad()
         train_logit = self.network_aux(train_input)
         inner_loss = F.cross_entropy(train_logit, train_target)
-        inner_loss += (self.lamb/2.) * ((torch.nn.utils.parameters_to_vector(self.network_aux.parameters())-torch.nn.utils.parameters_to_vector(self.network.parameters()).detach())**2).sum()
         inner_loss.backward()
         self.inner_optimizer.step()
         return None
 
     @torch.enable_grad()
-    def cg(self, in_grad, outer_grad):
+    def neumann_approx(self, in_grad, outer_grad):
         in_grad = torch.nn.utils.parameters_to_vector(in_grad)
         outer_grad = torch.nn.utils.parameters_to_vector(outer_grad)
         x = outer_grad.clone().detach()
-        r = outer_grad.clone().detach() - self.hv_prod(in_grad, x)
-        p = r.clone().detach()
-        for i in range(self.n_cg):
-            Ap = self.hv_prod(in_grad, p)
-            alpha = (r @ r)/(p @ Ap)
-            x = x + alpha * p
-            r_new = r - alpha * Ap
-            beta = (r_new @ r_new)/(r @ r)
-            p = r_new + beta * p
-            r = r_new.clone().detach()
-        #     print(alpha, beta ,r @ r);input()
-        # print('end')
+        for i in range(self.n_series):
+            outer_grad = self.hv_prod(in_grad, outer_grad)
+            x = x + outer_grad
         return self.vec_to_grad(x)
     
     def vec_to_grad(self, vec):
@@ -62,9 +52,10 @@ class iMAML(GBML):
     def hv_prod(self, in_grad, x):
         scalar = in_grad @ x.detach()
         hv = torch.autograd.grad(scalar, self.network_aux.parameters(), retain_graph=True)
-        hv = torch.nn.utils.parameters_to_vector(hv).detach()
-        # precondition with identity matrix
-        return hv/self.lamb + x
+        hv = torch.nn.utils.parameters_to_vector(hv)
+        hv = F.normalize(hv, dim=0) * x.norm(p=2, dim=0) # scale as identity mapping
+        hv = (-1./self.lamb) * hv # scale for regularization
+        return hv.detach()
 
     def outer_loop(self, batch, is_train):
         
@@ -95,7 +86,7 @@ class iMAML(GBML):
             if is_train:
                 in_grad = torch.autograd.grad(in_loss, self.network_aux.parameters(), create_graph=True)
                 outer_grad = torch.autograd.grad(outer_loss, self.network_aux.parameters())
-                grad_list.append(self.cg(in_grad, outer_grad))
+                grad_list.append(self.neumann_approx(in_grad, outer_grad))
                 loss_list.append(outer_loss.item())
 
         if is_train:
