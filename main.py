@@ -208,7 +208,7 @@ def parse_args():
     parser.add_argument('--net', type=str, default='ConvNet')
     parser.add_argument('--n_conv', type=int, default=4)
     parser.add_argument('--n_dense', type=int, default=0)
-    parser.add_argument('--hidden_dim', type=int, default=256)
+    parser.add_argument('--hidden_dim', type=int, default=64)
     parser.add_argument('--in_channels', type=int, default=3)
     parser.add_argument('--hidden_channels', type=int, default=64,
         help='Number of channels for each convolutional layer (default: 64).')

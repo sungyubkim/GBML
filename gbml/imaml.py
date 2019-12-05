@@ -18,7 +18,7 @@ class iMAML(GBML):
         self._init_opt()
         self.inner_optimizer = torch.optim.SGD(self.network_aux.parameters(), lr=self.args.inner_lr)
         self.lamb = 2.0
-        self.n_cg = 1
+        self.n_cg = 3
         return None
 
     @torch.enable_grad()
@@ -95,7 +95,8 @@ class iMAML(GBML):
             if is_train:
                 in_grad = torch.autograd.grad(in_loss, self.network_aux.parameters(), create_graph=True)
                 outer_grad = torch.autograd.grad(outer_loss, self.network_aux.parameters())
-                grad_list.append(self.cg(in_grad, outer_grad))
+                implicit_grad = self.cg(in_grad, outer_grad)
+                grad_list.append(implicit_grad)
                 loss_list.append(outer_loss.item())
 
         if is_train:
