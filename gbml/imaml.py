@@ -13,33 +13,28 @@ class iMAML(GBML):
     def __init__(self, args):
         super().__init__(args)
         self._init_net()
-        self.network_aux = type(self.network)(args).cuda()
-        self.network_aux.load_state_dict(self.network.state_dict())
         self._init_opt()
-        self.inner_optimizer = torch.optim.SGD(self.network_aux.parameters(), lr=self.args.inner_lr)
         self.lamb = 2.0
         self.n_cg = 3
         return None
 
     @torch.enable_grad()
-    def inner_loop(self, train_input, train_target):
-        self.network_aux.zero_grad()
-        train_logit = self.network_aux(train_input)
+    def inner_loop(self, fmodel, diffopt, train_input, train_target):
+        
+        train_logit = fmodel(train_input)
         inner_loss = F.cross_entropy(train_logit, train_target)
-        inner_loss += (self.lamb/2.) * ((torch.nn.utils.parameters_to_vector(self.network_aux.parameters())-torch.nn.utils.parameters_to_vector(self.network.parameters()).detach())**2).sum()
-        inner_loss.backward()
-        self.inner_optimizer.step()
+        inner_loss += (self.lamb/2.) * ((torch.nn.utils.parameters_to_vector(self.network.parameters())-torch.nn.utils.parameters_to_vector(self.network.parameters()).detach())**2).sum()
+        diffopt.step(inner_loss)
+
         return None
 
-    @torch.enable_grad()
-    def cg(self, in_grad, outer_grad):
-        in_grad = torch.nn.utils.parameters_to_vector(in_grad)
-        outer_grad = torch.nn.utils.parameters_to_vector(outer_grad)
+    @torch.no_grad()
+    def cg(self, in_grad, outer_grad, params):
         x = outer_grad.clone().detach()
-        r = outer_grad.clone().detach() - self.hv_prod(in_grad, x)
+        r = outer_grad.clone().detach() - self.hv_prod(in_grad, x, params)
         p = r.clone().detach()
         for i in range(self.n_cg):
-            Ap = self.hv_prod(in_grad, p)
+            Ap = self.hv_prod(in_grad, p, params)
             alpha = (r @ r)/(p @ Ap)
             x = x + alpha * p
             r_new = r - alpha * Ap
@@ -59,9 +54,9 @@ class iMAML(GBML):
             pointer += num_param
         return res
 
-    def hv_prod(self, in_grad, x):
-        scalar = in_grad @ x.detach()
-        hv = torch.autograd.grad(scalar, self.network_aux.parameters(), retain_graph=True)
+    @torch.enable_grad()
+    def hv_prod(self, in_grad, x, params):
+        hv = torch.autograd.grad(in_grad, params, retain_graph=True, grad_outputs=x)
         hv = torch.nn.utils.parameters_to_vector(hv).detach()
         # precondition with identity matrix
         return hv/self.lamb + x
@@ -77,27 +72,28 @@ class iMAML(GBML):
 
         for (train_input, train_target, test_input, test_target) in zip(train_inputs, train_targets, test_inputs, test_targets):
 
-            self.network_aux.load_state_dict(self.network.state_dict())
+            with higher.innerloop_ctx(self.network, self.inner_optimizer, track_higher_grads=False) as (fmodel, diffopt):
 
-            for step in range(self.args.n_inner):
-                self.inner_loop(train_input, train_target)
+                for step in range(self.args.n_inner):
+                    self.inner_loop(fmodel, diffopt, train_input, train_target)
+                
+                train_logit = fmodel(train_input)
+                in_loss = F.cross_entropy(train_logit, train_target)
+
+                test_logit = fmodel(test_input)
+                outer_loss = F.cross_entropy(test_logit, test_target)
+                loss_log += outer_loss.item()/self.batch_size
+
+                with torch.no_grad():
+                    acc_log += get_accuracy(test_logit, test_target).item()/self.batch_size
             
-            train_logit = self.network_aux(train_input)
-            in_loss = F.cross_entropy(train_logit, train_target)
-
-            test_logit = self.network_aux(test_input)
-            outer_loss = F.cross_entropy(test_logit, test_target)
-            loss_log += outer_loss.item()/self.batch_size
-
-            with torch.no_grad():
-                acc_log += get_accuracy(test_logit, test_target).item()/self.batch_size
-        
-            if is_train:
-                in_grad = torch.autograd.grad(in_loss, self.network_aux.parameters(), create_graph=True)
-                outer_grad = torch.autograd.grad(outer_loss, self.network_aux.parameters())
-                implicit_grad = self.cg(in_grad, outer_grad)
-                grad_list.append(implicit_grad)
-                loss_list.append(outer_loss.item())
+                if is_train:
+                    params = list(fmodel.parameters(time=-1))
+                    in_grad = torch.nn.utils.parameters_to_vector(torch.autograd.grad(in_loss, params, create_graph=True))
+                    outer_grad = torch.nn.utils.parameters_to_vector(torch.autograd.grad(outer_loss, params))
+                    implicit_grad = self.cg(in_grad, outer_grad, params)
+                    grad_list.append(implicit_grad)
+                    loss_list.append(outer_loss.item())
 
         if is_train:
             self.outer_optimizer.zero_grad()
