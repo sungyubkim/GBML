@@ -14,8 +14,8 @@ class iMAML(GBML):
         super().__init__(args)
         self._init_net()
         self._init_opt()
-        self.lamb = 2.0
-        self.n_cg = 3
+        self.lamb = 100.0
+        self.n_cg = 1
         return None
 
     @torch.enable_grad()
@@ -23,7 +23,6 @@ class iMAML(GBML):
         
         train_logit = fmodel(train_input)
         inner_loss = F.cross_entropy(train_logit, train_target)
-        inner_loss += (self.lamb/2.) * ((torch.nn.utils.parameters_to_vector(self.network.parameters())-torch.nn.utils.parameters_to_vector(self.network.parameters()).detach())**2).sum()
         diffopt.step(inner_loss)
 
         return None
@@ -41,8 +40,6 @@ class iMAML(GBML):
             beta = (r_new @ r_new)/(r @ r)
             p = r_new + beta * p
             r = r_new.clone().detach()
-        #     print(alpha, beta ,r @ r);input()
-        # print('end')
         return self.vec_to_grad(x)
     
     def vec_to_grad(self, vec):

@@ -14,7 +14,8 @@ class Neumann(GBML):
         super().__init__(args)
         self._init_net()
         self._init_opt()
-        self.n_series = 3
+        self.lamb = 100.0
+        self.n_series = 1
         return None
 
     @torch.enable_grad()
@@ -48,7 +49,7 @@ class Neumann(GBML):
     def hv_prod(self, in_grad, x, params):
         hv = torch.autograd.grad(in_grad, params, retain_graph=True, grad_outputs=x)
         hv = torch.nn.utils.parameters_to_vector(hv)
-        hv = (-1.*self.args.inner_lr) * hv # scale for regularization
+        hv = (-1./self.lamb) * hv # scaling for convergence
         return hv.detach()
 
     def outer_loop(self, batch, is_train):
